@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bipartite Graph Check (BFS)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: #0f0f1a;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid #2a2a3e;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 6px;
+            font-size: 1.8em;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 22px;
+            font-size: 0.95em;
+        }
+
+        /* ─── TOP BAR ─── */
+        .top-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .panel {
+            background: #161625;
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid #2a2a3e;
+        }
+
+        .panel h3 {
+            color: #aaa;
+            margin-bottom: 12px;
+            font-size: 0.82em;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+        }
+
+        /* ─── MAIN 3-COL ─── */
+        .main-content {
+            display: grid;
+            grid-template-columns: 270px 1fr 420px;
+            gap: 16px;
+        }
+
+        /* ─── LEFT ─── */
+        .left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .preset-btn {
+            padding: 10px 14px;
+            background: #1e1e30;
+            color: #ccc;
+            border: 1px solid #2a2a3e;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.88em;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .preset-btn:hover {
+            border-color: #7c6aff;
+            color: #fff;
+            background: #1a1a2e;
+        }
+
+        .preset-btn.active {
+            border-color: #7c6aff;
+            background: rgba(124,106,255,0.12);
+            color: #7c6aff;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 6px;
+            color: #666;
+            font-size: 0.82em;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 9px 12px;
+            background: #0a0a14;
+            border: 1px solid #2a2a3e;
+            border-radius: 8px;
+            color: #ddd;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #7c6aff;
+        }
+
+        textarea.input-field {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn-generate {
+            width: 100%;
+            padding: 11px;
+            background: linear-gradient(135deg, #7c6aff, #a855f7);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.92em;
+            font-weight: 600;
+            transition: opacity 0.2s, transform 0.15s;
+        }
+
+        .btn-generate:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        .input-hint {
+            margin-top: 8px;
+            font-size: 0.78em;
+            color: #555;
+            line-height: 1.45;
+        }
+
+        .input-hint code {
+            background: #1e1e30;
+            padding: 1px 5px;
+            border-radius: 3px;
+            color: #9a8fff;
+        }
+
+        /* ─── MIDDLE ─── */
+        .mid-col {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .canvas-wrap {
+            background: #161625;
+            border-radius: 12px;
+            border: 1px solid #2a2a3e;
+            height: 480px;
+            overflow: hidden;
+        }
+
+        #canvas { display: block; }
+
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .stat-box {
+            background: #161625;
+            border: 1px solid #2a2a3e;
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+
+        .stat-box .stat-label {
+            font-size: 0.75em;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 5px;
+        }
+
+        .stat-box .stat-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            color: #ddd;
+            font-weight: 600;
+        }
+
+        .stat-value.good  { color: #4ade80; }
+        .stat-value.bad   { color: #f44336; }
+        .stat-value.active { color: #ffd700; }
+
+        /* ─── RIGHT ─── */
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .code-box {
+            background: #1a1a2a;
+            border: 1px solid #2a2a3e;
+            border-radius: 12px;
+            padding: 18px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+            /* matches canvas height minus queue */
+            height: 330px;
+        }
+
+        .code-box pre {
+            font-family: 'Courier New', monospace;
+            font-size: 0.88em;
+            line-height: 1.85;
+            color: #7a7a8e;
+            margin: 0;
+            white-space: pre;
+        }
+
+        .hl {
+            background: rgba(124,106,255,0.22);
+            color: #fff !important;
+            font-weight: bold;
+            padding: 2px 7px;
+            border-radius: 4px;
+            display: inline-block;
+            box-shadow: 0 0 0 1px #7c6aff;
+        }
+
+        /* ─── QUEUE BOX (bottom right) ─── */
+        .queue-box {
+            background: #161625;
+            border: 1px solid #2a2a3e;
+            border-radius: 12px;
+            padding: 16px 18px;
+        }
+
+        .queue-box h3 {
+            color: #aaa;
+            font-size: 0.82em;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .queue-track {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            min-height: 38px;
+        }
+
+        .queue-arrow {
+            color: #444;
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        .q-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #1e1e30;
+            border: 1px solid #2a2a3e;
+            border-radius: 8px;
+            padding: 6px 11px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.84em;
+            color: #ccc;
+            transition: all 0.25s;
+        }
+
+        .q-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        .q-item.front {
+            border-color: #ffd700;
+            background: rgba(255,215,0,0.08);
+        }
+
+        .q-empty {
+            color: #444;
+            font-size: 0.84em;
+            font-style: italic;
+        }
+
+        /* ─── BUTTONS ─── */
+        .btn-start {
+            padding: 11px 22px;
+            background: linear-gradient(135deg,#4ade80,#22c55e);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 700;
+            transition: opacity 0.2s, transform 0.15s;
+        }
+
+        .btn-start:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+        .btn-start:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-reset {
+            padding: 11px 22px;
+            background: #1e1e30;
+            color: #aaa;
+            border: 1px solid #2a2a3e;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-reset:hover { border-color: #7c6aff; color: #fff; }
+
+        .ctrl-btns { display: flex; gap: 10px; }
+
+        /* ─── SPEED ─── */
+        .speed-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .speed-row span { color: #666; font-size: 0.82em; }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            flex: 1;
+            height: 5px;
+            border-radius: 3px;
+            background: #2a2a3e;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            background: #7c6aff;
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(124,106,255,0.5);
+        }
+
+        /* ─── LEGEND ─── */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.84em;
+            color: #888;
+        }
+
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.15);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔀 Bipartite Graph Check</h1>
+    <p class="subtitle">Level 4 — BFS Coloring Approach</p>
+
+    <!-- TOP BAR -->
+    <div class="top-controls">
+        <div class="panel">
+            <h3>Controls</h3>
+            <div class="ctrl-btns">
+                <button class="btn-start" id="startBtn" onclick="startVisualization()">▶ Start BFS</button>
+                <button class="btn-reset" onclick="resetVisualization()">↻ Reset</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>Animation Speed</h3>
+            <div class="speed-row">
+                <span>Slow</span>
+                <input type="range" id="speedSlider" min="100" max="2000" value="1000" step="100" oninput="updateSpeed(this.value)">
+                <span>Fast</span>
+            </div>
+            <div style="margin-top:8px; text-align:center;">
+                <span style="color:#666; font-size:0.82em;" id="speedValue">1000ms</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>Legend</h3>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-dot" style="background:#fff;"></div>Unvisited</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#7c6aff;"></div>Color 0</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#f97316;"></div>Color 1</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#f44336;"></div>Conflict!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-content">
+
+        <!-- LEFT -->
+        <div class="left-col">
+            <div class="panel">
+                <h3>Presets</h3>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <button class="preset-btn" onclick="loadGraph('bipartite4')">✅ Bipartite (4 nodes)</button>
+                    <button class="preset-btn" onclick="loadGraph('bipartite6')">✅ Bipartite (6 nodes)</button>
+                    <button class="preset-btn" onclick="loadGraph('odd-cycle')">❌ Odd Cycle (5 nodes)</button>
+                    <button class="preset-btn" onclick="loadGraph('even-cycle')">✅ Even Cycle (6 nodes)</button>
+                    <button class="preset-btn" onclick="loadGraph('triangle')">❌ Triangle</button>
+                    <button class="preset-btn" onclick="loadGraph('complex-bi')">✅ Complex Bipartite</button>
+                    <button class="preset-btn" onclick="loadGraph('complex-not')">❌ Complex Non-Bipartite</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Custom Input</h3>
+                <label class="input-label">Number of Nodes</label>
+                <input type="number" class="input-field" id="numNodes" min="1" max="20" value="4">
+                <label class="input-label" style="margin-top:12px;">Edges (one per line)</label>
+                <textarea class="input-field" id="edgesInput" rows="5" placeholder="0 1&#x0a;1 2&#x0a;2 3&#x0a;3 0"></textarea>
+                <button class="btn-generate" onclick="loadCustomGraph()" style="margin-top:10px;">Generate Graph</button>
+                <div class="input-hint">
+                    <strong>Format:</strong> two space-separated node indices per line.<br>
+                    Example: <code>0 1</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- MIDDLE -->
+        <div class="mid-col">
+            <div class="canvas-wrap">
+                <canvas id="canvas"></canvas>
+            </div>
+            <div class="status-bar">
+                <div class="stat-box">
+                    <div class="stat-label">Status</div>
+                    <div class="stat-value" id="statusText">Ready</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Current Node</div>
+                    <div class="stat-value" id="currentNode">—</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Assigning Color</div>
+                    <div class="stat-value" id="assignColor">—</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Bipartite?</div>
+                    <div class="stat-value" id="bipartiteStatus">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="right-col">
+            <div class="panel" style="padding:12px 16px;"><h3 style="margin-bottom:0;">Algorithm Code</h3></div>
+            <div class="code-box" id="codeDisplay"><pre></pre></div>
+
+            <!-- QUEUE (bottom right) -->
+            <div class="queue-box">
+                <h3>📦 BFS Queue</h3>
+                <div class="queue-track" id="queueTrack">
+                    <span class="q-empty">Empty</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─── STATE ───
+const canvas   = document.getElementById('canvas');
+const ctx      = canvas.getContext('2d');
+
+let nodes      = [], edges = [], graph = {};
+let color      = [];          // -1 unvisited, 0 or 1
+let queue      = [];
+let speed      = 1000;
+let running    = false;
+let conflict   = null;        // [u, v] conflicting edge
+let currentNode= -1;
+
+// ─── PRESETS ───
+const PRESETS = {
+    'bipartite4': {
+        n: 4,
+        edges: [[0,1],[1,2],[2,3],[3,0]]
+    },
+    'bipartite6': {
+        n: 6,
+        edges: [[0,1],[0,3],[1,2],[2,3],[2,4],[3,5]]
+    },
+    'odd-cycle': {
+        n: 5,
+        edges: [[0,1],[1,2],[2,3],[3,4],[4,0]]
+    },
+    'even-cycle': {
+        n: 6,
+        edges: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0]]
+    },
+    'triangle': {
+        n: 3,
+        edges: [[0,1],[1,2],[2,0]]
+    },
+    'complex-bi': {
+        n: 8,
+        edges: [[0,1],[0,3],[1,2],[2,3],[4,5],[5,6],[6,7],[7,4],[0,5]]
+    },
+    'complex-not': {
+        n: 7,
+        edges: [[0,1],[1,2],[2,0],[3,4],[4,5],[5,6],[6,3]]
+    }
+};
+
+// ─── LAYOUT helpers ───
+function circleLayout(n) {
+    const arr = [];
+    for (let i = 0; i < n; i++) {
+        const a = (2*Math.PI*i)/n - Math.PI/2;
+        arr.push({ id:i, x:400+200*Math.cos(a), y:300+200*Math.sin(a) });
+    }
+    return arr;
+}
+
+function forceLayout(nodeArr, edgeArr, iters=150) {
+    nodeArr.forEach(n => { n.vx=0; n.vy=0; });
+    for (let it=0; it<iters; it++) {
+        nodeArr.forEach(n => { n.fx=0; n.fy=0; });
+        for (let i=0;i<nodeArr.length;i++)
+            for (let j=i+1;j<nodeArr.length;j++) {
+                const dx=nodeArr[j].x-nodeArr[i].x, dy=nodeArr[j].y-nodeArr[i].y;
+                const d=Math.sqrt(dx*dx+dy*dy)||1, f=3000/(d*d);
+                nodeArr[i].fx-=f*dx/d; nodeArr[i].fy-=f*dy/d;
+                nodeArr[j].fx+=f*dx/d; nodeArr[j].fy+=f*dy/d;
+            }
+        edgeArr.forEach(([u,v]) => {
+            const dx=nodeArr[v].x-nodeArr[u].x, dy=nodeArr[v].y-nodeArr[u].y;
+            const d=Math.sqrt(dx*dx+dy*dy)||1, f=d/80;
+            nodeArr[u].fx+=f*dx/d; nodeArr[u].fy+=f*dy/d;
+            nodeArr[v].fx-=f*dx/d; nodeArr[v].fy-=f*dy/d;
+        });
+        nodeArr.forEach(n => {
+            n.vx=(n.vx+n.fx)*0.8; n.vy=(n.vy+n.fy)*0.8;
+            n.x+=n.vx; n.y+=n.vy;
+        });
+    }
+    nodeArr.forEach(n => { delete n.vx; delete n.vy; delete n.fx; delete n.fy; n.x=Math.round(n.x); n.y=Math.round(n.y); });
+}
+
+function scaleToFit() {
+    if (!nodes.length) return;
+    let mnX=1e9,mxX=-1e9,mnY=1e9,mxY=-1e9;
+    nodes.forEach(n => { mnX=Math.min(mnX,n.x); mxX=Math.max(mxX,n.x); mnY=Math.min(mnY,n.y); mxY=Math.max(mxY,n.y); });
+    const pad=60, aW=canvas.width-2*pad, aH=canvas.height-2*pad;
+    const cW=mxX-mnX||1, cH=mxY-mnY||1;
+    const sc=Math.min(aW/cW, aH/cH, 1.3);
+    const cx=canvas.width/2, cy=canvas.height/2, gcx=(mnX+mxX)/2, gcy=(mnY+mxY)/2;
+    nodes.forEach(n => { n.x=cx+(n.x-gcx)*sc; n.y=cy+(n.y-gcy)*sc; });
+}
+
+// ─── LOAD ───
+function loadPreset(key) {
+    if (running) return;
+    const p = PRESETS[key];
+    nodes = circleLayout(p.n);
+    edges = JSON.parse(JSON.stringify(p.edges));
+    forceLayout(nodes, edges);
+    buildAdj();
+    scaleToFit();
+    resetVisualization();
+}
+
+function loadGraph(key) { loadPreset(key); }
+
+function loadCustomGraph() {
+    if (running) return;
+    const n = parseInt(document.getElementById('numNodes').value);
+    if (isNaN(n)||n<1||n>20) { alert('Nodes must be 1–20'); return; }
+    const lines = document.getElementById('edgesInput').value.trim().split('\n');
+    const e = [];
+    for (let l of lines) {
+        l = l.trim(); if (!l) continue;
+        const p = l.split(/\s+/);
+        if (p.length !== 2) { alert('Each line: two numbers'); return; }
+        const u=parseInt(p[0]), v=parseInt(p[1]);
+        if (isNaN(u)||isNaN(v)||u<0||v<0||u>=n||v>=n) { alert(`Bad edge: ${l}. Use 0–${n-1}`); return; }
+        e.push([u,v]);
+    }
+    nodes = circleLayout(n);
+    edges = e;
+    forceLayout(nodes, edges);
+    buildAdj();
+    scaleToFit();
+    resetVisualization();
+}
+
+function buildAdj() {
+    graph = {};
+    nodes.forEach(nd => graph[nd.id]=[]);
+    edges.forEach(([u,v]) => { graph[u].push(v); graph[v].push(u); });
+}
+
+// ─── RESET ───
+function resetVisualization() {
+    color = new Array(nodes.length).fill(-1);
+    queue = [];
+    running = false;
+    conflict = null;
+    currentNode = -1;
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('statusText').textContent   = 'Ready';
+    document.getElementById('statusText').className     = 'stat-value';
+    document.getElementById('currentNode').textContent  = '—';
+    document.getElementById('currentNode').className    = 'stat-value';
+    document.getElementById('assignColor').textContent  = '—';
+    document.getElementById('assignColor').className    = 'stat-value';
+    document.getElementById('bipartiteStatus').textContent = '—';
+    document.getElementById('bipartiteStatus').className   = 'stat-value';
+    renderQueue();
+    updateCode('');
+    draw();
+}
+
+// ─── SPEED ───
+function updateSpeed(v) {
+    speed = 2100 - parseInt(v);
+    document.getElementById('speedValue').textContent = v + 'ms';
+}
+
+// ─── CODE HIGHLIGHT ───
+const CODE_LINES = [
+    'bool solve(int start,',
+    '    vector<vector<int>> &adj,',
+    '    vector<int> &color)',
+    '{',
+    '    queue<int> q;',
+    '    color[start]=0;',
+    '    q.push(start);',
+    '',
+    '    while(!q.empty())',
+    '    {',
+    '        int node=q.front();',
+    '        q.pop();',
+    '',
+    '        for(int neighbour:adj[node])',
+    '        {',
+    '            if(color[neighbour]==-1)',
+    '            {',
+    '                color[neighbour]=1-color[node];',
+    '                q.push(neighbour);',
+    '            }',
+    '            else if(color[neighbour]==color[node])',
+    '                return false;',
+    '        }',
+    '    }',
+    '    return true;',
+    '}'
+];
+
+const STEP_LINES = {
+    'init':      [5,6],
+    'dequeue':   [10,11],
+    'for':       [13],
+    'unvisited': [15],
+    'assign':    [17,18],
+    'conflict':  [20,21],
+    'done-true': [24]
+};
+
+function updateCode(step) {
+    const hl = (step && STEP_LINES[step]) || [];
+    let html = '<pre>';
+    CODE_LINES.forEach((line, i) => {
+        html += hl.includes(i)
+            ? `<span class="hl">${line}</span>\n`
+            : line + '\n';
+    });
+    html += '</pre>';
+    document.getElementById('codeDisplay').innerHTML = html;
+
+    // auto-scroll
+    if (hl.length) {
+        const el = document.getElementById('codeDisplay');
+        const lh = 1.85 * 0.88 * 16;
+        el.scrollTop = Math.max(0, (hl[0]-2)*lh);
+    }
+}
+
+// ─── QUEUE RENDER ───
+function renderQueue() {
+    const track = document.getElementById('queueTrack');
+    if (!queue.length) { track.innerHTML = '<span class="q-empty">Empty</span>'; return; }
+    const COL = ['#7c6aff','#f97316'];
+    track.innerHTML = queue.map((nd, i) =>
+        `<div class="q-item ${i===0?'front':''}">
+            <div class="q-dot" style="background:${COL[color[nd]]||'#fff'}"></div>
+            ${nd}
+         </div>`
+    ).join('<span class="queue-arrow">→</span>');
+}
+
+// ─── SET STAT ───
+function setStat(id, val, cls) {
+    const el = document.getElementById(id);
+    el.textContent = val;
+    el.className = 'stat-value' + (cls ? ' '+cls : '');
+}
+
+// ─── BFS ───
+async function startVisualization() {
+    if (running || !nodes.length) return;
+    running = true;
+    document.getElementById('startBtn').disabled = true;
+    resetVisualization();
+
+    // run BFS for every component
+    let result = true;
+    for (let i = 0; i < nodes.length; i++) {
+        if (color[i] !== -1) continue;
+        if (!(await bfs(i))) { result = false; break; }
+    }
+
+    if (result) {
+        setStat('statusText','✅ Bipartite','good');
+        setStat('bipartiteStatus','Yes','good');
+        updateCode('done-true');
+    }
+
+    running = false;
+    document.getElementById('startBtn').disabled = false;
+}
+
+async function bfs(start) {
+    color[start] = 0;
+    queue.push(start);
+    setStat('statusText','Running…','active');
+    updateCode('init');
+    renderQueue();
+    draw();
+    await sleep(speed);
+
+    while (queue.length) {
+        const node = queue.shift();
+        currentNode = node;
+        setStat('currentNode', node, 'active');
+        updateCode('dequeue');
+        renderQueue();
+        draw();
+        await sleep(speed);
+
+        updateCode('for');
+        await sleep(speed);
+
+        for (const nb of graph[node]) {
+            if (conflict) return false;
+
+            if (color[nb] === -1) {
+                updateCode('unvisited');
+                draw();
+                await sleep(speed);
+
+                color[nb] = 1 - color[node];
+                queue.push(nb);
+                setStat('assignColor', color[nb], color[nb]===0?'good':'active');
+                updateCode('assign');
+                renderQueue();
+                draw();
+                await sleep(speed);
+            } else if (color[nb] === color[node]) {
+                conflict = [node, nb];
+                setStat('statusText','❌ Not Bipartite','bad');
+                setStat('bipartiteStatus','No','bad');
+                setStat('assignColor','Conflict!','bad');
+                updateCode('conflict');
+                renderQueue();
+                draw();
+                await sleep(speed);
+                return false;
+            }
+        }
+    }
+    currentNode = -1;
+    setStat('currentNode','—','');
+    renderQueue();
+    draw();
+    return true;
+}
+
+// ─── DRAW ───
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const COL_FILL   = ['#7c6aff','#f97316'];   // color 0 / color 1
+    const COL_STROKE = ['#a78bfa','#fb923c'];
+
+    // edges
+    edges.forEach(([u,v]) => {
+        const a=nodes[u], b=nodes[v];
+        const isConflict = conflict && ((conflict[0]===u&&conflict[1]===v)||(conflict[0]===v&&conflict[1]===u));
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        if (isConflict) {
+            ctx.strokeStyle = '#f44336';
+            ctx.lineWidth  = 5;
+            ctx.setLineDash([8,5]);
+        } else {
+            ctx.strokeStyle = (color[u]!==-1 && color[v]!==-1) ? '#3a3a5e' : '#2a2a3e';
+            ctx.lineWidth  = 2.5;
+            ctx.setLineDash([]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+    });
+
+    // nodes
+    nodes.forEach(nd => {
+        const c = color[nd.id];
+        const isCur   = nd.id === currentNode;
+        const isBad   = conflict && (conflict[0]===nd.id || conflict[1]===nd.id);
+
+        // glow
+        if (isBad) {
+            ctx.beginPath();
+            ctx.arc(nd.x, nd.y, 34, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(244,67,54,0.25)';
+            ctx.fill();
+        } else if (isCur) {
+            ctx.beginPath();
+            ctx.arc(nd.x, nd.y, 34, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255,215,0,0.18)';
+            ctx.fill();
+        }
+
+        // circle
+        ctx.beginPath();
+        ctx.arc(nd.x, nd.y, 26, 0, Math.PI*2);
+        if (isBad)       ctx.fillStyle = '#f44336';
+        else if (c === -1) ctx.fillStyle = '#1e1e30';
+        else             ctx.fillStyle = COL_FILL[c];
+        ctx.fill();
+
+        ctx.strokeStyle = isBad ? '#ff5555' : isCur ? '#ffd700' : (c!==-1 ? COL_STROKE[c] : '#444');
+        ctx.lineWidth   = isCur || isBad ? 3.5 : 2.5;
+        ctx.stroke();
+
+        // label
+        ctx.fillStyle = '#fff';
+        ctx.font     = 'bold 17px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(nd.id, nd.x, nd.y);
+
+        // color badge
+        if (c !== -1 && !isBad) {
+            ctx.fillStyle = 'rgba(15,15,26,0.75)';
+            ctx.beginPath();
+            ctx.roundRect(nd.x-13, nd.y+22, 26, 16, 5);
+            ctx.fill();
+            ctx.fillStyle = COL_STROKE[c];
+            ctx.font = 'bold 11px Arial';
+            ctx.fillText('C'+c, nd.x, nd.y+30);
+        }
+    });
+}
+
+// ─── CANVAS SIZE ───
+function resizeCanvas() {
+    const wrap = canvas.parentElement;
+    canvas.width  = wrap.clientWidth - 2;
+    canvas.height = wrap.clientHeight - 2;
+    if (nodes.length) scaleToFit();
+    draw();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+loadPreset('bipartite4');
+document.getElementById('edgesInput').value = '0 1\n1 2\n2 3\n3 0';
+</script>
+</body>
+</html>
